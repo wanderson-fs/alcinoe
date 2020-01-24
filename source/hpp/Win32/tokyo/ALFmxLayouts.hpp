@@ -147,6 +147,7 @@ private:
 	bool FShowScrollBars;
 	bool FAutoHide;
 	bool FMouseEvents;
+	bool fGestureEvents;
 	TALScrollBoxPositionChangeEvent FOnViewportPositionChange;
 	TALScrollBoxBarInit fOnScrollBarInit;
 	System::Classes::TNotifyEvent fOnAniStart;
@@ -166,15 +167,12 @@ private:
 	void __fastcall setAniCalculations(TALScrollBoxAniCalculations* const Value);
 	bool __fastcall isMaxContentHeightStored(void);
 	bool __fastcall isMaxContentWidthStored(void);
-	void __fastcall internalMouseDown(System::Uitypes::TMouseButton Button, System::Classes::TShiftState Shift, float X, float Y);
-	void __fastcall internalMouseMove(System::Classes::TShiftState Shift, float X, float Y);
-	void __fastcall internalMouseUp(System::Uitypes::TMouseButton Button, System::Classes::TShiftState Shift, float X, float Y);
-	void __fastcall internalMouseLeave(void);
 	
 protected:
 	virtual void __fastcall Loaded(void);
 	virtual void __fastcall DoAddObject(Fmx::Types::TFmxObject* const AObject);
 	virtual void __fastcall DoRealign(void);
+	virtual void __fastcall CMGesture(Fmx::Types::TGestureEventInfo &EventInfo);
 	virtual TALScrollBoxBar* __fastcall CreateScrollBar(const Fmx::Controls::TOrientation aOrientation);
 	virtual TALScrollBoxContent* __fastcall CreateContent(void);
 	virtual TALScrollBoxAniCalculations* __fastcall CreateAniCalculations(void);

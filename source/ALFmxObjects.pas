@@ -1,6 +1,6 @@
 unit ALFmxObjects;
 
-{$IF CompilerVersion > 33} // rio
+{$IF CompilerVersion > 32} // tokyo
   {$MESSAGE WARN 'Check if FMX.Objects.pas was not updated and adjust the IFDEF'}
 {$ENDIF}
 
@@ -50,7 +50,7 @@ type
 
       //Best fit the image in the rectangle of the control:
       //* If any dimension of the image is larger than the rectangle of the control, then scales down the image
-      //  (keeping image proportions – the ratio between the width and height) to fit the whole image in the rectangle
+      //  (keeping image proportions ï¿½ the ratio between the width and height) to fit the whole image in the rectangle
       //  of the control. That is, either the width of the resized image is equal to the width of the control's rectangle
       //  or the height of the resized image is equal to the height of the rectangle of the control. The whole image
       //  should be displayed. The image is displayed centered in the rectangle of the control.
@@ -82,7 +82,7 @@ type
 
       //Best fit the image in the rectangle of the control:
       //* If any dimension of the image is larger than the rectangle of the control, then scales down the image
-      //  (keeping image proportions – the ratio between the width and height) to fit the height or the width of the image in the rectangle
+      //  (keeping image proportions ï¿½ the ratio between the width and height) to fit the height or the width of the image in the rectangle
       //  of the control and crop the extra part of the image. That is, the width of the resized image is equal to the width of the control's rectangle
       //  AND the height of the resized image is equal to the height of the rectangle of the control.
       // * If the original image is smaller than the rectangle of the control, then the image is stretched to best fit in
@@ -447,8 +447,6 @@ type
     function GetVertTextAlign: TTextAlign;
     function GetWordWrap: Boolean;
     function GetText: string;
-    procedure SetMaxWidth(const Value: Single);
-    procedure SetMaxHeight(const Value: Single);
     function IsMaxWidthStored: Boolean;
     function IsMaxHeightStored: Boolean;
   protected
@@ -523,8 +521,8 @@ type
     property TextSettings: TTextSettings read GetTextSettings write SetTextSettings;
     property Visible default True;
     property Width;
-    property MaxWidth: single read fMaxWidth write SetMaxWidth stored IsMaxWidthStored;       // these properties are usefull when used
-    property MaxHeight: single read fMaxHeight write SetMaxHeight stored IsMaxHeightStored;      // with autosize
+    property MaxWidth: single read fMaxWidth write fMaxWidth stored IsMaxWidthStored;       // these properties are usefull when used
+    property MaxHeight: single read fMaxHeight write fMaxHeight stored IsMaxHeightStored;      // with autosize
     {Drag and Drop events}
     property OnDragEnter;
     property OnDragLeave;
@@ -722,7 +720,7 @@ begin
 
       //Best fit the image in the rectangle of the control:
       //* If any dimension of the image is larger than the rectangle of the control, then scales down the image
-      //  (keeping image proportions – the ratio between the width and height) to fit the whole image in the rectangle
+      //  (keeping image proportions ï¿½ the ratio between the width and height) to fit the whole image in the rectangle
       //  of the control. That is, either the width of the resized image is equal to the width of the control's rectangle
       //  or the height of the resized image is equal to the height of the rectangle of the control. The whole image
       //  should be displayed. The image is displayed centered in the rectangle of the control.
@@ -783,7 +781,7 @@ begin
 
       //Best fit the image in the rectangle of the control:
       //* If any dimension of the image is larger than the rectangle of the control, then scales down the image
-      //  (keeping image proportions – the ratio between the width and height) to fit the height or the width of the image in the rectangle
+      //  (keeping image proportions ï¿½ the ratio between the width and height) to fit the height or the width of the image in the rectangle
       //  of the control and crop the extra part of the image. That is, the width of the resized image is equal to the width of the control's rectangle
       //  AND the height of the resized image is equal to the height of the rectangle of the control.
       // * If the original image is smaller than the rectangle of the control, then the image is stretched to best fit in
@@ -1701,7 +1699,7 @@ begin
 
       //stroke with solid color
       if Stroke.Kind = TBrushKind.Solid then begin
-        aPaint.setColor(integer(Stroke.Color));
+        aPaint.setColor(Stroke.Color);
         case lineType of
           TLineType.Diagonal: aCanvas.drawLine(aRect.left {startX},
                                                aRect.top {startY},
@@ -1992,7 +1990,7 @@ begin
     aOptions.FontStyle := fBuffontStyle;
     aOptions.FontColor := fBufFontColor;
     //-----
-    //aOptions.EllipsisText: String; // default = '…';
+    //aOptions.EllipsisText: String; // default = 'ï¿½';
     //aOptions.EllipsisFontStyle: TFontStyles; // default = [];
     //aOptions.EllipsisFontColor: TalphaColor; // default = TAlphaColorRec.Null;
     //-----
@@ -2299,26 +2297,8 @@ begin
   if fRestoreLayoutUpdateAfterLoaded then begin
     if (FAutoSize) and
        (Text <> '') then begin
-
-      //Originally, if WordWrap then the algo take in account the current width of the TALText
-      //to calculate the autosized width (mean the size can be lower than maxwidth if the current width
-      //is already lower than maxwidth). problem with that is if we for exemple change the text (or font
-      //dimension) of an already calculated TALText, then it's the old width (that correspond to the
-      //previous text/font) that will be taken in account. finally the good way is to alway use the
-      //maxwidth if we desir a max width and don't rely on the current width
-
-      //if WordWrap then Layout.MaxSize := TPointF.Create(Min(Width, maxWidth), maxHeight)
-      //else Layout.MaxSize := TPointF.Create(maxWidth, MaxHeight);
-      if (WordWrap) and
-         (Align in [TAlignLayout.Client,
-                    TAlignLayout.Contents,
-                    TAlignLayout.Top,
-                    TAlignLayout.Bottom,
-                    TAlignLayout.MostTop,
-                    TAlignLayout.MostBottom,
-                    TAlignLayout.VertCenter]) then Layout.MaxSize := TPointF.Create(Width, maxHeight)
+      if WordWrap then Layout.MaxSize := TPointF.Create(Min(Width, maxWidth), maxHeight)
       else Layout.MaxSize := TPointF.Create(maxWidth, MaxHeight);
-
     end
     else Layout.MaxSize := TPointF.Create(width, height);  // << this is important because else when the component is loaded then
                                                            // << we will call DoRenderLayout that will use the original maxsise (ie: 65535, 65535)
@@ -2632,25 +2612,8 @@ begin
       LOpacity := FLayout.Opacity;
       try
 
-        //Originally, if WordWrap then the algo take in account the current width of the TALText
-        //to calculate the autosized width (mean the size can be lower than maxwidth if the current width
-        //is already lower than maxwidth). problem with that is if we for exemple change the text (or font
-        //dimension) of an already calculated TALText, then it's the old width (that correspond to the
-        //previous text/font) that will be taken in account. finally the good way is to alway use the
-        //maxwidth if we desir a max width and don't rely on the current width
-
-        //if WordWrap then R := TRectF.Create(0, 0, Min(Width, maxWidth), maxHeight)
-        //else R := TRectF.Create(0, 0, maxWidth, MaxHeight);
-        if (WordWrap) and
-           (Align in [TAlignLayout.Client,
-                      TAlignLayout.Contents,
-                      TAlignLayout.Top,
-                      TAlignLayout.Bottom,
-                      TAlignLayout.MostTop,
-                      TAlignLayout.MostBottom,
-                      TAlignLayout.VertCenter]) then R := TRectF.Create(0, 0, Width, maxHeight)
+        if WordWrap then R := TRectF.Create(0, 0, Min(Width, maxWidth), maxHeight)
         else R := TRectF.Create(0, 0, maxWidth, MaxHeight);
-
         FLayout.BeginUpdate;
         try
           FLayout.TopLeft := R.TopLeft;
@@ -2841,26 +2804,8 @@ procedure TALText.EndUpdate;
 begin
   if (FAutoSize) and
      (Text <> '') then begin
-
-    //Originally, if WordWrap then the algo take in account the current width of the TALText
-    //to calculate the autosized width (mean the size can be lower than maxwidth if the current width
-    //is already lower than maxwidth). problem with that is if we for exemple change the text (or font
-    //dimension) of an already calculated TALText, then it's the old width (that correspond to the
-    //previous text/font) that will be taken in account. finally the good way is to alway use the
-    //maxwidth if we desir a max width and don't rely on the current width
-
-    //if WordWrap then Layout.MaxSize := TPointF.Create(Min(Width, maxWidth), maxHeight)
-    //else Layout.MaxSize := TPointF.Create(maxWidth, MaxHeight);
-    if (WordWrap) and
-       (Align in [TAlignLayout.Client,
-                  TAlignLayout.Contents,
-                  TAlignLayout.Top,
-                  TAlignLayout.Bottom,
-                  TAlignLayout.MostTop,
-                  TAlignLayout.MostBottom,
-                  TAlignLayout.VertCenter]) then Layout.MaxSize := TPointF.Create(Width, maxHeight)
+    if WordWrap then Layout.MaxSize := TPointF.Create(Min(Width, maxWidth), maxHeight)
     else Layout.MaxSize := TPointF.Create(maxWidth, MaxHeight);
-
   end
   else Layout.MaxSize := TPointF.Create(width, height);  // << this is important because else when the component is loaded then
                                                          // << we will call DoRenderLayout that will use the original maxsise (ie: 65535, 65535)
@@ -2877,24 +2822,6 @@ begin
   if not doubleBuffered then exit(false);
   result := (TALdoubleBufferedTextLayout(fLayout).fbufBitmap <> nil) and
             (TALdoubleBufferedTextLayout(fLayout).fBufTextBreaked);
-end;
-
-{*************************************************}
-procedure TALText.SetMaxWidth(const Value: Single);
-begin
-  if compareValue(fMaxWidth, Value, Tepsilon.position) <> 0 then begin
-    fMaxWidth := Value;
-    AdjustSize;
-  end;
-end;
-
-{**************************************************}
-procedure TALText.SetMaxHeight(const Value: Single);
-begin
-  if compareValue(fMaxHeight, Value, Tepsilon.position) <> 0 then begin
-    fMaxHeight := Value;
-    AdjustSize;
-  end;
 end;
 
 {*****************************************}
@@ -2966,4 +2893,3 @@ initialization
   {$endif}
 
 end.
-
